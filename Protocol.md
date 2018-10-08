@@ -1,7 +1,5 @@
 # Command Patterns for Kraken
 
-{{toc}}
-
 ## Message Types
 
 By the looks of it, the Kraken X62 communicates by two command types:
@@ -45,9 +43,12 @@ disassembling NXZTs DLLs. The report size seems to be ``new byte[65]``
 ```
 0x02  ; control command
 0x4c  ; light control, which begs to wonder what 0x4a is
-0x13  ; 0b0001_0000 is directional parameter
-      ; 0b0000_1000 is a binary option solely for "alternating" light option
-      ; 0b0000_0111 is 'iChannelMode' which is still a mystery
+0x13  ; 0b0001_0_0_00 is directional parameter
+      ; 0b0000_1_0_00 is a binary option solely for "alternating" light option
+      ; 0b0000_0_0_11 is 'iChannelMode'; controls logo or rim settings:
+      ; - 0 - apply this set for rim and logo
+      ; - 1 - apply this set for logo only
+      ; - 2 - apply this set for rim only
 0x06  ; pulse mode, see light mode table
 0x25  ; 0b111_00_000 is the light index number (for multiple colored light)
       ; 0b000_11_000 is the LED group size, which exists only for marquee width
