@@ -17,7 +17,6 @@
         Background="Transparent"
         Visibility="Hidden">
     <Window.Resources>
-
         <!-- NotifyIcon and related stuff here -->
 
         <!-- The taskbar context menu -->
@@ -26,21 +25,25 @@
         reuse the same context menu (which is a resource) again (which will have its DataContext set to the old TaskbarIcon)
         -->
         <ContextMenu x:Shared="false" x:Key="MainSysTrayMenu">
-
             <MenuItem Header="{Binding TemperatureText, Mode=OneWay}" IsEnabled="False">
                 <MenuItem.Icon>
-                    <Image Source="Resources/temperature.png" />
+                    <Image Source="Resources/temperature.png" RenderOptions.BitmapScalingMode="HighQuality" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{Binding PumpSpeedText, Mode=OneWay}" IsEnabled="False">
                 <MenuItem.Icon>
-                    <Image Source="Resources/pump.png" />
+                    <Image Source="Resources/pump.png" RenderOptions.BitmapScalingMode="HighQuality" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{Binding FanSpeedText, Mode=OneWay}" IsEnabled="False">
                 <MenuItem.Icon>
-                    <Image Source="Resources/fan.png" />
+                    <Image Source="Resources/fan.png" RenderOptions.BitmapScalingMode="HighQuality" />
                 </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem Header="Lightning" Name="LightningSubMenu">
+                <MenuItem Header="Logo" Name="LogoLightMenu"/>
+                <MenuItem Header="Rim" Name="RimLightMenu" />
             </MenuItem>
             <Separator />
             <MenuItem Header="RPM Benchmark" cal:Message.Attach="PerformanceBenchmark" />
@@ -56,6 +59,6 @@
 
     <Grid>
         <TextBlock>View + ViewModel started from bootstrapper. This should not be visible.</TextBlock>
-        <ContentControl Content="{StaticResource SystemTrayIcon}" />
+        <ContentControl Content="{StaticResource SystemTrayIcon}" Name="TrayElement"/>
     </Grid>
 </Window>

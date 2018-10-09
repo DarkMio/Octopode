@@ -83,6 +83,7 @@
     <Compile Include="ConsoleManager.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Bootstrapper.cs" />
+    <Compile Include="LightningManager.cs" />
     <Compile Include="SystemTrayView.xaml.cs">
       <DependentUpon>SystemTrayView.xaml</DependentUpon>
     </Compile>

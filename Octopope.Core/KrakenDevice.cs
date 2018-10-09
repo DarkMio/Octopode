@@ -19,18 +19,22 @@ namespace Octopode.Core {
         }
     }
 
+    /// <summary>
+    /// WARNING: Before changing, this is the definition for old ProtocolBytes!
+    /// CAM assemblies have two different setups
+    /// </summary>
     public enum ColorMode : byte {
-        Solid           = 0x00,
+        Fixed           = 0x00,
         Fading          = 0x01,
         SpectrumWave    = 0x02,
         Marquee         = 0x03,
         CoveringMarquee = 0x04,
         Alternating     = 0x05,
-        Pulse           = 0x06,
-        Breathing       = 0x07,
-        Alert           = 0x08,
-        Candle          = 0x09,
-        Unknown         = 0x0A,
+        Breathing       = 0x06,
+        Pulse           = 0x07,
+        TaiChi          = 0x08,
+        WaterCooler     = 0x09,
+        Loading         = 0x0A,
         RPM             = 0x0B,
         Wings           = 0x0C,
         Wave            = 0x0D,
@@ -38,7 +42,7 @@ namespace Octopode.Core {
         Halt            = 0x1E
     }
 
-    public enum Speed : byte {
+    public enum AnimationSpeed : byte {
         Slowest = 0x00,
         Slow    = 0x01,
         Normal  = 0x02,
@@ -75,18 +79,18 @@ namespace Octopode.Core {
     public class LEDConfiguration {
         public readonly byte lightIndex;     //  [0, 8]
         public readonly byte ledGroupSize;   //  [0, 3]
-        public readonly byte animationSpeed; //  [0, 4]
+        public readonly AnimationSpeed animationSpeed; //  [0, 4]
         
         private LEDConfiguration() { }
 
-        public LEDConfiguration(byte lightIndex, byte ledGroupSize, byte animationSpeed) {
+        public LEDConfiguration(byte lightIndex, byte ledGroupSize, AnimationSpeed animationSpeed) {
             this.lightIndex = lightIndex;
             this.ledGroupSize = ledGroupSize;
             this.animationSpeed = animationSpeed;
         }
 
         public static implicit operator byte(LEDConfiguration config) {
-            return (byte) ((config.lightIndex << 5) | (config.ledGroupSize << 3) | (config.animationSpeed));
+            return (byte) ((config.lightIndex << 5) | (config.ledGroupSize << 3) | ((byte) config.animationSpeed));
         }
     }
 

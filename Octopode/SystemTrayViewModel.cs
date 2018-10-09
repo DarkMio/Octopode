@@ -4,7 +4,10 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using Caliburn.Micro;
+using Hardcodet.Wpf.TaskbarNotification;
 using Microsoft.Win32;
 using Octopode.Core;
 
@@ -28,7 +31,17 @@ namespace Octopode {
         private float maxTemperature;
         private readonly RegistryKey appKey;
 
-        public string TooltipText {
+        public readonly LightningManager logoManager;
+        public readonly LightningManager rimManager;
+
+        public LightningManager LogoManager => logoManager;
+
+        private object contextProp;
+        public object ContextProp => contextProp;
+
+        
+        
+    public string TooltipText {
             get { return _tooltipText; }
             set {
                 _tooltipText = value;
@@ -137,6 +150,47 @@ namespace Octopode {
             }
 
             LoadProfile();
+            
+            logoManager = new LightningManager(device, LightChannel.Logo);
+            rimManager = new LightningManager(device, LightChannel.Rim);
+
+
+
+        }
+
+        protected override void OnViewAttached(object view, object context) {
+            base.OnViewAttached(view, context);
+            
+            var systemTrayView = (SystemTrayView) view;
+            var contentControl = (ContentControl) systemTrayView.FindName("TrayElement");
+            var taskbarIcon = (TaskbarIcon) contentControl.Content;
+            var items = taskbarIcon.ContextMenu.Items;
+            foreach(var item in items) {
+                if(!(item is MenuItem menuItem)) {
+                    continue;
+                }
+
+                if(menuItem.Name != "LightningSubMenu") {
+                    continue;
+                }
+
+                foreach(var lightItem in menuItem.Items) {
+                    if(!(lightItem is MenuItem lightMenuItem)) {
+                        continue;
+                    }
+
+                    if(lightMenuItem.Name == "RimLightMenu") {
+                        foreach(var rimLightItem in rimManager.menuItems) {
+                            lightMenuItem.Items.Add(rimLightItem);
+                        }
+                    } else if(lightMenuItem.Name == "LogoLightMenu") {
+                        foreach(var logoLightItem in logoManager.menuItems) {
+                            lightMenuItem.Items.Add(logoLightItem);
+                        }
+                    }
+                        
+                }
+            }
         }
 
         public string ActiveIcon {
@@ -150,7 +204,7 @@ namespace Octopode {
         private void LoadProfile() {
             minPumpRPM = (int) appKey.GetValue(Constants.RegistryMinPumpRPM, int.MaxValue);
             maxPumpRPM = (int) appKey.GetValue(Constants.RegistryMaxPumpRPM, int.MinValue);
-            ;
+            
             minFanRPM = (int) appKey.GetValue(Constants.RegistryMinFanRPM, int.MaxValue);
             maxFanRPM = (int) appKey.GetValue(Constants.RegistryMaxFanRPM, int.MinValue);
         }
@@ -201,6 +255,69 @@ namespace Octopode {
             device.SetFanSpeed(35);
         }
 
+        public void AddContextMenu(SystemTrayView context) {
+            var somethingsomething = context.window.Resources.FindName("LogoLightMenu");
+            var logoMenuItem = (MenuItem) FindChild<MenuItem>(Application.Current.MainWindow, "LogoLightMenu");
+            var rimMenuItem = (MenuItem) context.FindName("RimLightMenu");
+            var something = context.FindName("LogoLightMenu");
+            if(logoMenuItem != null) {
+                foreach(var item in logoManager.menuItems) {
+                    logoMenuItem.Items.Add(item);
+                }
+            }
+
+            if(rimMenuItem != null) {
+                foreach(var item in rimManager.menuItems) {
+                    rimMenuItem.Items.Add(item);
+                }
+            }
+        }
+
+        public static T FindChild<T>(DependencyObject parent, string childName)
+            where T : DependencyObject
+        {    
+            // Confirm parent and childName are valid. 
+            if (parent == null) return null;
+
+            T foundChild = null;
+
+            int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childrenCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                // If the child is not of the request child type child
+                T childType = child as T;
+                if (childType == null)
+                {
+                    // recursively drill down the tree
+                    foundChild = FindChild<T>(child, childName);
+
+                    // If the child is found, break so we do not overwrite the found child. 
+                    if (foundChild != null) break;
+                }
+                else if (!string.IsNullOrEmpty(childName))
+                {
+                    var frameworkElement = child as FrameworkElement;
+                    // If the child's name is set for search
+                    if (frameworkElement != null && frameworkElement.Name == childName)
+                    {
+                        // if the child's name is of the request name
+                        foundChild = (T)child;
+                        break;
+                    }
+                }
+                else
+                {
+                    // child element found.
+                    foundChild = (T)child;
+                    break;
+                }
+            }
+
+            return foundChild;
+        }
+    
+        
         public void CleanRegistryKeys() {
             appKey.DeleteSubKey(Constants.RegistryMaxFanRPM);
             appKey.DeleteSubKey(Constants.RegistryMaxPumpRPM);
@@ -213,6 +330,9 @@ namespace Octopode {
         }
 
         public void ExitApplication() {
+            var logoMenuItem = (MenuItem) FindChild<MenuItem>(Application.Current.MainWindow, "LogoLightMenu");
+            object res = Application.Current.FindResource("MainSysTrayMenu");
+
             Application.Current.Shutdown();
         }
     }

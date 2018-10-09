@@ -56,7 +56,7 @@ namespace Octopode.CLI {
                     Console.WriteLine($"{state.recordTime}:{state.recordTime.Millisecond:000}: {state.temperature}°C | Fan: {state.fanSpeed} | Pump: {state.pumpSpeed}");
                 }
                 var color = colors[z % colors.Length];
-                device.SetColor(ColorMode.Solid, new ControlBlock(false, true, LightChannel.Both), new LEDConfiguration(0, 0, 4),
+                device.SetColor(ColorMode.Fixed, new ControlBlock(false, true, LightChannel.Both), new LEDConfiguration(0, 0, AnimationSpeed.Fastest),
                                 color, color, color, color, color, color, color, color, color);
                 z += 1;
             }
