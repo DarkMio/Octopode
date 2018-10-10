@@ -42,8 +42,25 @@
             </MenuItem>
             <Separator />
             <MenuItem Header="Lightning" Name="LightningSubMenu">
-                <MenuItem Header="Logo" Name="LogoLightMenu"/>
+                <MenuItem Header="Logo" Name="LogoLightMenu" />
                 <MenuItem Header="Rim" Name="RimLightMenu" />
+                <MenuItem Header="Animation Speed">
+                    <MenuItem Header="Fastest" cal:Message.Attach="SetAnimationSpeed('FASTEST', $source)" />
+                    <MenuItem Header="Fast" cal:Message.Attach="SetAnimationSpeed('FAST', $source)" />
+                    <MenuItem Header="Normal" cal:Message.Attach="SetAnimationSpeed('NORMAL', $source)" />
+                    <MenuItem Header="Slow" cal:Message.Attach="SetAnimationSpeed('SLOW', $source)" />
+                    <MenuItem Header="Slowest" cal:Message.Attach="SetAnimationSpeed('SLOWEST', $source)" />
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="Fans">
+                <MenuItem Header="Silent" />
+                <MenuItem Header="Performance" />
+                <MenuItem Header="Fixed" />
+            </MenuItem>
+            <MenuItem Header="Pump">
+                <MenuItem Header="Silent" />
+                <MenuItem Header="Performance" />
+                <MenuItem Header="Fixed" />
             </MenuItem>
             <Separator />
             <MenuItem Header="RPM Benchmark" cal:Message.Attach="PerformanceBenchmark" />
@@ -59,6 +76,6 @@
 
     <Grid>
         <TextBlock>View + ViewModel started from bootstrapper. This should not be visible.</TextBlock>
-        <ContentControl Content="{StaticResource SystemTrayIcon}" Name="TrayElement"/>
+        <ContentControl Content="{StaticResource SystemTrayIcon}" Name="TrayElement" />
     </Grid>
 </Window>

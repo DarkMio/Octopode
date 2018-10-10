@@ -34,14 +34,11 @@ namespace Octopode {
         public readonly LightningManager logoManager;
         public readonly LightningManager rimManager;
 
-        public LightningManager LogoManager => logoManager;
+        private readonly CommandController commander;
+        private MenuItem previousSpeedBox;
 
-        private object contextProp;
-        public object ContextProp => contextProp;
 
-        
-        
-    public string TooltipText {
+        public string TooltipText {
             get { return _tooltipText; }
             set {
                 _tooltipText = value;
@@ -53,7 +50,7 @@ namespace Octopode {
             get { return pumpRpm; }
             set {
                 if(minPumpRPM < int.MaxValue && maxPumpRPM > int.MinValue) {
-                    float percentile = ((value * 100f) / (maxPumpRPM)) ;
+                    float percentile = ((value * 100f) / (maxPumpRPM));
                     PumpSpeedText = $"Pump: {value}RPM ({percentile:##.#}%)";
                 } else {
                     PumpSpeedText = $"Pump: {value}RPM";
@@ -77,7 +74,7 @@ namespace Octopode {
             get { return fanRpm; }
             set {
                 if(minFanRPM < int.MaxValue && maxFanRPM > int.MinValue) {
-                    var percentile = ((value * 100f) / (maxFanRPM)) ;
+                    var percentile = ((value * 100f) / (maxFanRPM));
                     FanSpeedText = $"Fan: {value}RPM ({percentile:##.#}%)";
                 } else {
                     FanSpeedText = $"Fan: {value}RPM";
@@ -150,48 +147,26 @@ namespace Octopode {
             }
 
             LoadProfile();
-            
-            logoManager = new LightningManager(device, LightChannel.Logo);
-            rimManager = new LightningManager(device, LightChannel.Rim);
 
+            logoManager = new LightningManager(LightChannel.Logo);
+            rimManager = new LightningManager(LightChannel.Rim);
 
+            logoManager.OnNewLightSetting += LightingManagerCallback;
+            rimManager.OnNewLightSetting += LightingManagerCallback;
 
+            commander = new CommandController(device.usbDevice);
         }
 
-        protected override void OnViewAttached(object view, object context) {
-            base.OnViewAttached(view, context);
-            
-            var systemTrayView = (SystemTrayView) view;
-            var contentControl = (ContentControl) systemTrayView.FindName("TrayElement");
-            var taskbarIcon = (TaskbarIcon) contentControl.Content;
-            var items = taskbarIcon.ContextMenu.Items;
-            foreach(var item in items) {
-                if(!(item is MenuItem menuItem)) {
-                    continue;
-                }
-
-                if(menuItem.Name != "LightningSubMenu") {
-                    continue;
-                }
-
-                foreach(var lightItem in menuItem.Items) {
-                    if(!(lightItem is MenuItem lightMenuItem)) {
-                        continue;
-                    }
-
-                    if(lightMenuItem.Name == "RimLightMenu") {
-                        foreach(var rimLightItem in rimManager.menuItems) {
-                            lightMenuItem.Items.Add(rimLightItem);
-                        }
-                    } else if(lightMenuItem.Name == "LogoLightMenu") {
-                        foreach(var logoLightItem in logoManager.menuItems) {
-                            lightMenuItem.Items.Add(logoLightItem);
-                        }
-                    }
-                        
-                }
-            }
+        private void LightingManagerCallback(LightningManager sender, LightSetting setting) {
+            commander.AddCommand(KrakenDevice.GenerateMessage(setting.mode,
+                                                              new ControlBlock(false, false, sender.lightChannel),
+                                                              new LEDConfiguration(0, 0, AnimationSpeed.Normal),
+                                                              new[] {
+                                                                  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+                                                                  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF
+                                                              }));
         }
+
 
         public string ActiveIcon {
             get { return _activeIcon; }
@@ -204,7 +179,7 @@ namespace Octopode {
         private void LoadProfile() {
             minPumpRPM = (int) appKey.GetValue(Constants.RegistryMinPumpRPM, int.MaxValue);
             maxPumpRPM = (int) appKey.GetValue(Constants.RegistryMaxPumpRPM, int.MinValue);
-            
+
             minFanRPM = (int) appKey.GetValue(Constants.RegistryMinFanRPM, int.MaxValue);
             maxFanRPM = (int) appKey.GetValue(Constants.RegistryMaxFanRPM, int.MinValue);
         }
@@ -237,86 +212,45 @@ namespace Octopode {
             System.Console.WriteLine("Starting staged Performance Benchmark:");
             Console.WriteLine("- Stage 1: Slow");
             for(var i = 0; i < 10; i++) {
-                device.SetFanSpeed(0x1E);
-                device.SetPumpSpeed(0x1E);
-                Thread.Sleep(100);
+                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(35, true));
+                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(35, false));
+                Thread.Sleep(1000);
             }
 
             Console.WriteLine("- Stage 2: Full");
             for(var i = 0; i < 10; i++) {
-                device.SetFanSpeed(0x64);
-                device.SetPumpSpeed(0x64);
-                Thread.Sleep(100);
+                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(100, true));
+                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(100, false));
+                Thread.Sleep(1000);
             }
 
-            Thread.Sleep(5000);
             Console.WriteLine("- Stage 3: Reset");
-            device.SetPumpSpeed(25);
-            device.SetFanSpeed(35);
+            commander.AddCommand(KrakenDevice.GenerateSpeedMessage(40, true));
+            commander.AddCommand(KrakenDevice.GenerateSpeedMessage(40, false));
         }
 
-        public void AddContextMenu(SystemTrayView context) {
-            var somethingsomething = context.window.Resources.FindName("LogoLightMenu");
-            var logoMenuItem = (MenuItem) FindChild<MenuItem>(Application.Current.MainWindow, "LogoLightMenu");
-            var rimMenuItem = (MenuItem) context.FindName("RimLightMenu");
-            var something = context.FindName("LogoLightMenu");
-            if(logoMenuItem != null) {
-                foreach(var item in logoManager.menuItems) {
-                    logoMenuItem.Items.Add(item);
-                }
+        public void SetAnimationSpeed(AnimationSpeed speedSetting, MenuItem sender) {
+            if(previousSpeedBox != null) {
+                previousSpeedBox.IsChecked = false;
             }
 
-            if(rimMenuItem != null) {
-                foreach(var item in rimManager.menuItems) {
-                    rimMenuItem.Items.Add(item);
-                }
-            }
+            sender.IsChecked = true;
+            previousSpeedBox = sender;
+            logoManager.animationSpeed = speedSetting;
+            rimManager.animationSpeed = speedSetting;
+            commander.AddCommand(KrakenDevice.GenerateMessage(logoManager.selectedSetting.mode,
+                                                              new ControlBlock(false, false, logoManager.lightChannel),
+                                                              new LEDConfiguration(0, 0, speedSetting), new[] {
+                                                                  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+                                                                  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF
+                                                              }));
+            commander.AddCommand(KrakenDevice.GenerateMessage(rimManager.selectedSetting.mode,
+                                                              new ControlBlock(false, false, rimManager.lightChannel),
+                                                              new LEDConfiguration(0, 0, speedSetting), new[] {
+                                                                  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
+                                                                  0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF
+                                                              }));
         }
-
-        public static T FindChild<T>(DependencyObject parent, string childName)
-            where T : DependencyObject
-        {    
-            // Confirm parent and childName are valid. 
-            if (parent == null) return null;
-
-            T foundChild = null;
-
-            int childrenCount = VisualTreeHelper.GetChildrenCount(parent);
-            for (int i = 0; i < childrenCount; i++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, i);
-                // If the child is not of the request child type child
-                T childType = child as T;
-                if (childType == null)
-                {
-                    // recursively drill down the tree
-                    foundChild = FindChild<T>(child, childName);
-
-                    // If the child is found, break so we do not overwrite the found child. 
-                    if (foundChild != null) break;
-                }
-                else if (!string.IsNullOrEmpty(childName))
-                {
-                    var frameworkElement = child as FrameworkElement;
-                    // If the child's name is set for search
-                    if (frameworkElement != null && frameworkElement.Name == childName)
-                    {
-                        // if the child's name is of the request name
-                        foundChild = (T)child;
-                        break;
-                    }
-                }
-                else
-                {
-                    // child element found.
-                    foundChild = (T)child;
-                    break;
-                }
-            }
-
-            return foundChild;
-        }
-    
         
         public void CleanRegistryKeys() {
             appKey.DeleteSubKey(Constants.RegistryMaxFanRPM);
@@ -325,14 +259,11 @@ namespace Octopode {
             appKey.DeleteSubKey(Constants.RegistryMinPumpRPM);
         }
 
-    public void PerformanceBenchmark() {
+        public void PerformanceBenchmark() {
             Task.Run(() => UpdateBenchmark());
         }
 
         public void ExitApplication() {
-            var logoMenuItem = (MenuItem) FindChild<MenuItem>(Application.Current.MainWindow, "LogoLightMenu");
-            object res = Application.Current.FindResource("MainSysTrayMenu");
-
             Application.Current.Shutdown();
         }
     }

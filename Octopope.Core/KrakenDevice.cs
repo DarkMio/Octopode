@@ -95,8 +95,8 @@ namespace Octopode.Core {
     }
 
     public class KrakenDevice {
-        private const byte lowerSpeedLimit = 30;
-        private const byte upperSpeedLimit = 100;
+        private const byte LowerSpeedLimit = 30;
+        private const byte UpperSpeedLimit = 100;
         private byte deviceId;
         private int firmwareVersion;
 
@@ -165,13 +165,24 @@ namespace Octopode.Core {
         }
 
         public void SetFanSpeed(byte percentage) {
-            percentage = Math.Min(lowerSpeedLimit, Math.Max(upperSpeedLimit, percentage));
-            usbDevice.Write(new byte[] { 0x02, 0x4d, 0x00, 0x00, percentage });
+            percentage = Math.Min(LowerSpeedLimit, Math.Max(UpperSpeedLimit, percentage));
+            usbDevice.Write(GenerateSpeedMessage(percentage, false));
         }
 
         public void SetPumpSpeed(byte percentage) {
-            percentage = Math.Min(lowerSpeedLimit, Math.Max(upperSpeedLimit, percentage));
-            usbDevice.Write(new byte[] { 0x02, 0x4d, 0x40, 0x00, percentage });
+            percentage = Math.Min(LowerSpeedLimit, Math.Max(UpperSpeedLimit, percentage));
+            usbDevice.Write(GenerateSpeedMessage(percentage, true));
+        }
+
+        public static byte[] GenerateSpeedMessage(byte percentage, bool forPump) {
+            var deviceByte = (byte) (forPump ? 0x40 : 0x00);
+            return new byte[] {
+                0x02,        // control message
+                0x4d,        // rpm control
+                deviceByte,  // fan or pump?
+                0x00,        // ?
+                percentage   // 0x1E - 0x64 
+            };
         }
 
 
@@ -188,7 +199,7 @@ namespace Octopode.Core {
             usbDevice.Write(message, 1050);
         }
 
-        private static byte[] GenerateMessage(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig,
+        public static byte[] GenerateMessage(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig,
                                               int[] colorPattern) {
             // a message is constructed as following: 
             // 0x02  ; control command

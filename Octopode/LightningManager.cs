@@ -1,28 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Controls;
 using Octopode.Core;
 
 namespace Octopode {
     public class LightningManager {
-        private KrakenDevice context;
-        private LightChannel lightChannel;
+        public readonly LightChannel lightChannel;
 
         private readonly List<LightSetting> availableModes;
         public readonly List<MenuItem> menuItems;
+        public AnimationSpeed animationSpeed;
+        public LightSetting selectedSetting;
+
+        public Action<LightningManager, LightSetting> OnNewLightSetting;
 
         public List<MenuItem> MenuItems {
             get { return menuItems; }
         }
         
-        public LightningManager(KrakenDevice contextDevice, LightChannel observedChannel) {
-            context = contextDevice;
+        public LightningManager(LightChannel observedChannel) {
             lightChannel = observedChannel;
             availableModes = new List<LightSetting>();
             BuildLightOptions();
             menuItems = MenuFactory(availableModes);
+            animationSpeed = AnimationSpeed.Normal;
+            selectedSetting = availableModes[0];
         }
 
         private void BuildLightOptions() {
@@ -34,7 +38,6 @@ namespace Octopode {
 
         private List<MenuItem> MenuFactory(List<LightSetting> settings) {
             var list = new List<MenuItem>();
-
             foreach(var setting in settings) {
                 var menuItem = new MenuItem();
                 menuItem.Header = setting.mode.ToString();
@@ -46,7 +49,6 @@ namespace Octopode {
                 menuItem.Items.Add(dummy);
                 list.Add(menuItem);
             }
-
             return list;
         }
 
@@ -56,11 +58,9 @@ namespace Octopode {
             if(item == null) {
                 return;
             }
-
             var setting = availableModes.First(x => x.mode.ToString() == item.Header.ToString());
-            context.SetColor(setting.mode, new ControlBlock(false, false, lightChannel),
-                             new LEDConfiguration(0, 0, AnimationSpeed.Normal), 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
-                             0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF);
+            selectedSetting = setting;
+            OnNewLightSetting.Invoke(this, setting);
         }
     }
 }

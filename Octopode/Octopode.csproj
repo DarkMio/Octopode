@@ -85,6 +85,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CommandController.cs" />
     <Compile Include="ConsoleManager.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Bootstrapper.cs" />
