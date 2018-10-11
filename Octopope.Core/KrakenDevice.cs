@@ -179,14 +179,14 @@ namespace Octopode.Core {
             var content = new byte[fanCurve.Length][];
             var interval = (byte) (fanCurve.Length == 1 ? 0 : 100 / (fanCurve.Length - 1));
             for(byte i = 0; i < fanCurve.Length; i++) {
-                content[i] = GenerateCoolingMessage(forPump, saveProfile, fanCurve[i], i, interval);
+                content[i] = GenerateCoolingMessage(forPump, saveProfile, fanCurve[i], i, (byte) (i * interval));
             }
 
             return content;
         }
 
         public static byte[] GenerateCoolingMessage(bool forPump, bool saveProfile, byte speedPercentage,
-                                                    byte index = 0x00, byte interval = 0x00) {
+                                                    byte index = 0x00, byte temperature = 0x00) {
             // 0x02  ; control command
             // 0x4d  ; speed control
             // 0x40  ; (iIsSlave * 0x80 + iFanOrPump * 0x40 + index)
@@ -196,18 +196,16 @@ namespace Octopode.Core {
             //       ;   profile
             //       ; - iFanOrPump indicates 0: Fan, 1: Pump
             //       ; - index is the index of that cooling point
-            // 0x00  ; (index * iInterval)
-            //       ; - index being the curve index
-            //       ; - iInterval being 1 / count of curve points 
+            // 0x00  ; temperature, at which data point which value is interpolated
             // 0x1e  ; decimal for 30, lowest setting, alternatively 0x64 for highest
             var deviceByte = (byte) (forPump ? 0x40 : 0x00);
             var profileByte = (byte) (saveProfile ? 0x80 : 0x00);
             return new byte[] {
-                0x02, // control message
-                0x4d, // rpm control
-                (byte) (deviceByte + profileByte), // fan or pump and save profile or not?
-                (byte) (index * interval), // (index * iInterval)
-                speedPercentage // 0x1E - 0x64 
+                0x02,
+                0x4d,
+                (byte) (deviceByte + profileByte + index),
+                temperature,
+                speedPercentage
             };
         }
 
@@ -320,6 +318,10 @@ namespace Octopode.Core {
             while(LastStates.Count > 255) {
                 LastStates.Dequeue();
             }
+        }
+
+        public void Write(byte[] message) {
+            usbDevice.Write(message);
         }
 
         private KrakenState ParseDataPackage(HidDeviceData data) {

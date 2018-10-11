@@ -36,30 +36,35 @@ namespace Octopode.CLI {
                 return;
             }
             var device = new KrakenDevice(deviceList[0]);
-            // device.StartReading();
-            Console.WriteLine($"Locking onto Kraken X62 {device.DeviceId} with firmware v{device.FirmwareVersion}");
-            int counter = 0;
-            // device.SetColor(ColorMode.Solid, 0xFF_FF_FF);
-            int[] colors = new[] { 0x0000FF, 0x0, 0xFFFFFF, 0x0, 0xFF00FF, 0x0, 0x00FFFF, 0xFF0000, 0x0, 0xFFFF00, 0x0, 0x00FF00 };
-            var colorPattern = new int[8, 20];
-            for(var i = 0; i < 8; i++) {
-                for(var j = 0; j < 20; j++) {
-                    colorPattern[i, j] = colors[0];
-                }
+
+            var messages = KrakenDevice.GenerateCoolingMessage(false, true, 25,
+                                                               25,
+                                                               25,
+                                                               25,
+                                                               25,
+                                                               25,
+                                                               25,
+                                                               25,
+                                                               35,
+                                                               45,
+                                                               55,
+                                                               75,
+                                                               100,
+                                                               100,
+                                                               100,
+                                                               100,
+                                                               100,
+                                                               100,
+                                                               100,
+                                                               100,
+                                                               100);
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            foreach(var message in messages) {
+                device.Write(message);
             }
-            
-            var z = 1;
-            while(true) {
-                // device.Read();
-                while(device.LastStates.Count > 0) {
-                    var state = device.LastStates.Dequeue();
-                    Console.WriteLine($"{state.recordTime}:{state.recordTime.Millisecond:000}: {state.temperature}°C | Fan: {state.fanSpeed} | Pump: {state.pumpSpeed}");
-                }
-                var color = colors[z % colors.Length];
-                device.SetColor(ColorMode.Fixed, new ControlBlock(false, true, LightChannel.Both), new LEDConfiguration(0, 0, AnimationSpeed.Fastest),
-                                color, color, color, color, color, color, color, color, color);
-                z += 1;
-            }
+            stopwatch.Start();
+            Console.WriteLine($"Time taken: {stopwatch.ElapsedMilliseconds}ms - Avg: {stopwatch.ElapsedMilliseconds / (float) messages.Length}ms");
         }
     }
 }

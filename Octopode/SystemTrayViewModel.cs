@@ -251,6 +251,39 @@ namespace Octopode {
                                                                   0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF
                                                               }));
         }
+
+        public void SetFanSpeedSilent() {
+            var messages = KrakenDevice.GenerateCoolingMessage(false, true, 25, 25, 25, 25, 25, 25, 25, 25, 35, 45, 55,
+                                                              75, 100, 100, 100, 100, 100, 100, 100, 100, 100);
+            foreach(var message in messages) {
+                commander.AddCommand(message);
+            }
+        }
+
+        public void SetFanSpeedPerformance() {
+            var messages = KrakenDevice.GenerateCoolingMessage(false, true, 50, 50, 50, 50, 50, 50, 50, 50, 60, 70, 80,
+                                                               90, 100, 100, 100, 100, 100, 100, 100, 100, 100);
+            foreach(var message in messages) {
+                commander.AddCommand(message);
+            }
+        }
+
+        public void SetPumpSpeedSilent() {
+            var messages = KrakenDevice.GenerateCoolingMessage(true, true, 60, 60, 60, 60, 60, 60, 60, 60, 70, 80, 90,
+                                                               100, 100, 100, 100, 100, 100, 100, 100, 100, 100);
+            foreach(var message in messages) {
+                commander.AddCommand(message);
+            }
+            
+        }
+
+        public void SetPumpSpeedPerformance() {
+            var messages = KrakenDevice.GenerateCoolingMessage(true, true, 70, 70, 70, 70, 70, 70, 70, 70, 80, 85, 90,
+                                                               95, 100, 100, 100, 100, 100, 100, 100, 100, 100);
+            foreach(var message in messages) {
+                commander.AddCommand(message);
+            }
+        }
         
         public void CleanRegistryKeys() {
             appKey.DeleteSubKey(Constants.RegistryMaxFanRPM);

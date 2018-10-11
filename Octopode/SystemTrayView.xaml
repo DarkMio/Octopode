@@ -53,14 +53,12 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="Fans">
-                <MenuItem Header="Silent" />
-                <MenuItem Header="Performance" />
-                <MenuItem Header="Fixed" />
+                <MenuItem Header="Silent" x:Name="SetFanSpeedSilent"/>
+                <MenuItem Header="Performance" x:Name="SetFanSpeedPerformance"/>
             </MenuItem>
             <MenuItem Header="Pump">
-                <MenuItem Header="Silent" />
-                <MenuItem Header="Performance" />
-                <MenuItem Header="Fixed" />
+                <MenuItem Header="Silent" x:Name="SetPumpSpeedSilent"/>
+                <MenuItem Header="Performance" x:Name="SetPumpSpeedPerformance"/>
             </MenuItem>
             <Separator />
             <MenuItem Header="RPM Benchmark" cal:Message.Attach="PerformanceBenchmark" />
