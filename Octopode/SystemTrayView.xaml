@@ -24,56 +24,60 @@
         The "shared" directive is needed if we reopen the sample window a few times - WPF will otherwise
         reuse the same context menu (which is a resource) again (which will have its DataContext set to the old TaskbarIcon)
         -->
-        <ContextMenu x:Shared="false" x:Key="MainSysTrayMenu">
-            <MenuItem Header="{Binding TemperatureText, Mode=OneWay}" IsEnabled="False">
-                <MenuItem.Icon>
-                    <Image Source="Resources/temperature.png" RenderOptions.BitmapScalingMode="HighQuality" />
-                </MenuItem.Icon>
-            </MenuItem>
-            <MenuItem Header="{Binding PumpSpeedText, Mode=OneWay}" IsEnabled="False">
-                <MenuItem.Icon>
-                    <Image Source="Resources/pump.png" RenderOptions.BitmapScalingMode="HighQuality" />
-                </MenuItem.Icon>
-            </MenuItem>
-            <MenuItem Header="{Binding FanSpeedText, Mode=OneWay}" IsEnabled="False">
-                <MenuItem.Icon>
-                    <Image Source="Resources/fan.png" RenderOptions.BitmapScalingMode="HighQuality" />
-                </MenuItem.Icon>
-            </MenuItem>
-            <Separator />
-            <MenuItem Header="Lightning" Name="LightningSubMenu">
-                <MenuItem Header="Logo" Name="LogoLightMenu" />
-                <MenuItem Header="Rim" Name="RimLightMenu" />
-                <MenuItem Header="Animation Speed">
-                    <MenuItem Header="Fastest" cal:Message.Attach="SetAnimationSpeed('FASTEST', $source)" />
-                    <MenuItem Header="Fast" cal:Message.Attach="SetAnimationSpeed('FAST', $source)" />
-                    <MenuItem Header="Normal" cal:Message.Attach="SetAnimationSpeed('NORMAL', $source)" />
-                    <MenuItem Header="Slow" cal:Message.Attach="SetAnimationSpeed('SLOW', $source)" />
-                    <MenuItem Header="Slowest" cal:Message.Attach="SetAnimationSpeed('SLOWEST', $source)" />
-                </MenuItem>
-            </MenuItem>
-            <MenuItem Header="Fans">
-                <MenuItem Header="Silent" x:Name="SetFanSpeedSilent"/>
-                <MenuItem Header="Performance" x:Name="SetFanSpeedPerformance"/>
-            </MenuItem>
-            <MenuItem Header="Pump">
-                <MenuItem Header="Silent" x:Name="SetPumpSpeedSilent"/>
-                <MenuItem Header="Performance" x:Name="SetPumpSpeedPerformance"/>
-            </MenuItem>
-            <Separator />
-            <MenuItem Header="RPM Benchmark" cal:Message.Attach="PerformanceBenchmark" />
-            <MenuItem Header="Exit" cal:Message.Attach="ExitApplication" />
-        </ContextMenu>
 
-        <!-- the application main system tray icon -->
-        <tb:TaskbarIcon x:Key="SystemTrayIcon"
-                        IconSource="{Binding Path=ActiveIcon, Mode=OneWay}"
-                        ToolTipText="{Binding Path=TooltipText, Mode=OneWay}"
-                        ContextMenu="{StaticResource MainSysTrayMenu}" />
     </Window.Resources>
 
     <Grid>
         <TextBlock>View + ViewModel started from bootstrapper. This should not be visible.</TextBlock>
-        <ContentControl Content="{StaticResource SystemTrayIcon}" Name="TrayElement" />
+        <ContentControl Name="TrayElement">
+
+            <!-- the application main system tray icon -->
+            <tb:TaskbarIcon IconSource="{Binding Path=ActiveIcon, Mode=OneWay}"
+                            ToolTipText="{Binding Path=TooltipText, Mode=OneWay}">
+                <tb:TaskbarIcon.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{Binding TemperatureText, Mode=OneWay}" IsEnabled="False">
+                            <MenuItem.Icon>
+                                <Image Source="Resources/temperature.png" RenderOptions.BitmapScalingMode="HighQuality" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{Binding PumpSpeedText, Mode=OneWay}" IsEnabled="False">
+                            <MenuItem.Icon>
+                                <Image Source="Resources/pump.png" RenderOptions.BitmapScalingMode="HighQuality" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="{Binding FanSpeedText, Mode=OneWay}" IsEnabled="False">
+                            <MenuItem.Icon>
+                                <Image Source="Resources/fan.png" RenderOptions.BitmapScalingMode="HighQuality" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="Lightning" Name="LightningSubMenu">
+                            <MenuItem Header="Logo" Name="LogoLightMenu" />
+                            <MenuItem Header="Rim" Name="RimLightMenu" />
+                            <MenuItem Header="Animation Speed">
+                                <MenuItem Header="Fastest" cal:Message.Attach="SetAnimationSpeed('FASTEST', $source)" />
+                                <MenuItem Header="Fast" cal:Message.Attach="SetAnimationSpeed('FAST', $source)" />
+                                <MenuItem Header="Normal" cal:Message.Attach="SetAnimationSpeed('NORMAL', $source)" />
+                                <MenuItem Header="Slow" cal:Message.Attach="SetAnimationSpeed('SLOW', $source)" />
+                                <MenuItem Header="Slowest" cal:Message.Attach="SetAnimationSpeed('SLOWEST', $source)" />
+                            </MenuItem>
+                        </MenuItem>
+                        <MenuItem Header="Fans">
+                            <MenuItem Header="Silent" x:Name="SetFanSpeedSilent" />
+                            <MenuItem Header="Performance" x:Name="SetFanSpeedPerformance" />
+                        </MenuItem>
+                        <MenuItem Header="Pump">
+                            <MenuItem Header="Silent" x:Name="SetPumpSpeedSilent" />
+                            <MenuItem Header="Performance" x:Name="SetPumpSpeedPerformance" />
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Header="RPM Benchmark" cal:Message.Attach="PerformanceBenchmark" />
+                        <MenuItem Header="Exit" cal:Message.Attach="ExitApplication" />
+                        <MenuItem Header="Data Graph" cal:Message.Attach="CreateLinearGraph" />
+                    </ContextMenu>
+                </tb:TaskbarIcon.ContextMenu>
+            </tb:TaskbarIcon>
+        </ContentControl>
     </Grid>
 </Window>

@@ -192,7 +192,7 @@ namespace Octopode {
 
             if(lastState != null) {
                 TooltipText =
-                    $"{lastState.temperature}°C\nFan: {lastState.fanSpeed}RPM\nPump: {lastState.pumpSpeed}RPM";
+                    $"Water: {lastState.temperature}°C\nFan: {lastState.fanSpeed}RPM\nPump: {lastState.pumpSpeed}RPM";
                 PumpRpm = lastState.pumpSpeed;
                 FanRpm = lastState.fanSpeed;
                 Temperature = lastState.temperature;
@@ -227,6 +227,11 @@ namespace Octopode {
             Console.WriteLine("- Stage 3: Reset");
             commander.AddCommand(KrakenDevice.GenerateCoolingMessage(true, false, 40));
             commander.AddCommand(KrakenDevice.GenerateCoolingMessage(false, false, 40));
+        }
+
+        public void CreateLinearGraph() {
+            var window = new LinearDataGraph();
+            window.Show();
         }
 
         public void SetAnimationSpeed(AnimationSpeed speedSetting, MenuItem sender) {
