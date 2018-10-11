@@ -8,7 +8,7 @@ namespace Octopode {
 
         public Bootstrapper() {
             Initialize();
-            ConsoleManager.Show();
+            // ConsoleManager.Show();
         }
 
         protected override void ConfigureContainer(ContainerBuilder builder) {
@@ -19,7 +19,6 @@ namespace Octopode {
 
         protected override void OnStartup(object sender, StartupEventArgs e) {
             base.OnStartup(sender, e);
-
             DisplayRootViewFor<SystemTrayViewModel>();
         }
     }

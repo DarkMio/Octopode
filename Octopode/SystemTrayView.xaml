@@ -74,7 +74,10 @@
                         <Separator />
                         <MenuItem Header="RPM Benchmark" cal:Message.Attach="PerformanceBenchmark" />
                         <MenuItem Header="Exit" cal:Message.Attach="ExitApplication" />
-                        <MenuItem Header="Data Graph" cal:Message.Attach="CreateLinearGraph" />
+                        <MenuItem Header="Debugging / WIP"> 
+                            <MenuItem Header="Show Data Graph" cal:Message.Attach="CreateLinearGraph" />
+                            <MenuItem Header="Toggle Console" cal:Message.Attach="ToggleConsole($source)"></MenuItem>
+                        </MenuItem>
                     </ContextMenu>
                 </tb:TaskbarIcon.ContextMenu>
             </tb:TaskbarIcon>

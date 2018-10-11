@@ -229,6 +229,13 @@ namespace Octopode {
             commander.AddCommand(KrakenDevice.GenerateCoolingMessage(false, false, 40));
         }
 
+        public void ToggleConsole(MenuItem sender) {
+            if(sender != null) {
+                sender.IsChecked = !sender.IsChecked;
+            }
+            ConsoleManager.Toggle();
+        }
+
         public void CreateLinearGraph() {
             var window = new LinearDataGraph();
             window.Show();
