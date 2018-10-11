@@ -28,8 +28,16 @@ The message looks as following:
 ```
 0x02  ; control command
 0x4d  ; speed control
-0x40  ; pump control, alternatively 0x00 for fan control
-0x00  ; could be nothing, could be anything.
+0x40  ; (iIsSlave * 0x80 + iFanOrPump * 0x40 + index)
+      ; That gives us 64 points on pump, fan and a seconarday set of pump, fan
+      ; control points. Not sure what they, how they peform
+      ; - iIsSlave seems to be a memory region that gets stored - this saves a
+      ;   profile
+      ; - iFanOrPump indicates 0: Fan, 1: Pump
+      ; - index is the index of that cooling point
+0x00  ; (index * iInterval)
+      ; - index being the curve index
+      ; - iInterval being 1 / count of curve points 
 0x1e  ; decimal for 30, lowest setting, alternatively 0x64 for highest
 ```
 
@@ -56,10 +64,11 @@ disassembling NXZTs DLLs. The report size seems to be ``new byte[65]``
 0xFF  ; Green Color for Text
 0xFF  ; Red Color for Text
 0xFF  ; Blue Color for Text
-0xFF  ; Red Color for 1st (?) LED
-0xFF  ; Green Color for 1st (?) LED
-0xFF  ; Blue Color for 1st (?) LED
-...
+0xFF  ; Red Color for 1st LED
+0xFF  ; Green Color for 1st LED
+0xFF  ; Blue Color for 1st LED
+...   ; this repeats for the remaining 7 LEDs, note the initial switch between
+      ; GRB and RGB coloring
 ```
 
 It seems to fit (more or less randomly) 20 LEDs for controlling (60 bytes for

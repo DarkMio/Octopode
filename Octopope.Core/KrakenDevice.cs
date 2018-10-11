@@ -24,29 +24,29 @@ namespace Octopode.Core {
     /// CAM assemblies have two different setups
     /// </summary>
     public enum ColorMode : byte {
-        Fixed           = 0x00,
-        Fading          = 0x01,
-        SpectrumWave    = 0x02,
-        Marquee         = 0x03,
+        Fixed = 0x00,
+        Fading = 0x01,
+        SpectrumWave = 0x02,
+        Marquee = 0x03,
         CoveringMarquee = 0x04,
-        Alternating     = 0x05,
-        Breathing       = 0x06,
-        Pulse           = 0x07,
-        TaiChi          = 0x08,
-        WaterCooler     = 0x09,
-        Loading         = 0x0A,
-        RPM             = 0x0B,
-        Wings           = 0x0C,
-        Wave            = 0x0D,
-        Audio           = 0x0E,
-        Halt            = 0x1E
+        Alternating = 0x05,
+        Breathing = 0x06,
+        Pulse = 0x07,
+        TaiChi = 0x08,
+        WaterCooler = 0x09,
+        Loading = 0x0A,
+        RPM = 0x0B,
+        Wings = 0x0C,
+        Wave = 0x0D,
+        Audio = 0x0E,
+        Halt = 0x1E
     }
 
     public enum AnimationSpeed : byte {
         Slowest = 0x00,
-        Slow    = 0x01,
-        Normal  = 0x02,
-        Fast    = 0x03,
+        Slow = 0x01,
+        Normal = 0x02,
+        Fast = 0x03,
         Fastest = 0x04
     }
 
@@ -62,6 +62,7 @@ namespace Octopode.Core {
         public readonly LightChannel channelMode;
 
         private ControlBlock() { }
+
         public ControlBlock(bool forwardDirection, bool alternateMoving, LightChannel channels) {
             direction = forwardDirection;
             alternatingMoving = alternateMoving;
@@ -77,10 +78,10 @@ namespace Octopode.Core {
     }
 
     public class LEDConfiguration {
-        public readonly byte lightIndex;     //  [0, 8]
-        public readonly byte ledGroupSize;   //  [0, 3]
+        public readonly byte lightIndex; //  [0, 8]
+        public readonly byte ledGroupSize; //  [0, 3]
         public readonly AnimationSpeed animationSpeed; //  [0, 4]
-        
+
         private LEDConfiguration() { }
 
         public LEDConfiguration(byte lightIndex, byte ledGroupSize, AnimationSpeed animationSpeed) {
@@ -166,41 +167,68 @@ namespace Octopode.Core {
 
         public void SetFanSpeed(byte percentage) {
             percentage = Math.Min(LowerSpeedLimit, Math.Max(UpperSpeedLimit, percentage));
-            usbDevice.Write(GenerateSpeedMessage(percentage, false));
+            usbDevice.Write(GenerateCoolingMessage(false, false, percentage));
         }
 
         public void SetPumpSpeed(byte percentage) {
             percentage = Math.Min(LowerSpeedLimit, Math.Max(UpperSpeedLimit, percentage));
-            usbDevice.Write(GenerateSpeedMessage(percentage, true));
+            usbDevice.Write(GenerateCoolingMessage(true, false, percentage));
         }
 
-        public static byte[] GenerateSpeedMessage(byte percentage, bool forPump) {
+        public static byte[][] GenerateCoolingMessage(bool forPump, bool saveProfile, params byte[] fanCurve) {
+            var content = new byte[fanCurve.Length][];
+            var interval = (byte) (fanCurve.Length == 1 ? 0 : 100 / (fanCurve.Length - 1));
+            for(byte i = 0; i < fanCurve.Length; i++) {
+                content[i] = GenerateCoolingMessage(forPump, saveProfile, fanCurve[i], i, interval);
+            }
+
+            return content;
+        }
+
+        public static byte[] GenerateCoolingMessage(bool forPump, bool saveProfile, byte speedPercentage,
+                                                    byte index = 0x00, byte interval = 0x00) {
+            // 0x02  ; control command
+            // 0x4d  ; speed control
+            // 0x40  ; (iIsSlave * 0x80 + iFanOrPump * 0x40 + index)
+            //       ; That gives us 64 points on pump, fan and a seconarday set of pump, fan
+            //       ; control points. Not sure what they, how they peform
+            //       ; - iIsSlave seems to be a memory region that gets stored - this saves a
+            //       ;   profile
+            //       ; - iFanOrPump indicates 0: Fan, 1: Pump
+            //       ; - index is the index of that cooling point
+            // 0x00  ; (index * iInterval)
+            //       ; - index being the curve index
+            //       ; - iInterval being 1 / count of curve points 
+            // 0x1e  ; decimal for 30, lowest setting, alternatively 0x64 for highest
             var deviceByte = (byte) (forPump ? 0x40 : 0x00);
+            var profileByte = (byte) (saveProfile ? 0x80 : 0x00);
             return new byte[] {
-                0x02,        // control message
-                0x4d,        // rpm control
-                deviceByte,  // fan or pump?
-                0x00,        // ?
-                percentage   // 0x1E - 0x64 
+                0x02, // control message
+                0x4d, // rpm control
+                (byte) (deviceByte + profileByte), // fan or pump and save profile or not?
+                (byte) (index * interval), // (index * iInterval)
+                speedPercentage // 0x1E - 0x64 
             };
         }
 
 
-        public void SetColorPattern(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig, int[][] colorPattern) {
+        public void SetColorPattern(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig,
+                                    int[][] colorPattern) {
             for(byte i = 0; i < colorPattern.Length && i < 8; i++) {
                 var correctConfig = new LEDConfiguration(i, ledConfig.ledGroupSize, ledConfig.animationSpeed);
-                var message = GenerateMessage(mode, block, correctConfig, colorPattern[i]);
+                var message = GenerateLightMessage(mode, block, correctConfig, colorPattern[i]);
                 usbDevice.Write(message, 1050);
             }
         }
 
-        public void SetColor(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig, params int[] colorPattern) {
-            var message = GenerateMessage(mode, block, ledConfig, colorPattern);
+        public void SetColor(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig,
+                             params int[] colorPattern) {
+            var message = GenerateLightMessage(mode, block, ledConfig, colorPattern);
             usbDevice.Write(message, 1050);
         }
 
-        public static byte[] GenerateMessage(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig,
-                                              int[] colorPattern) {
+        public static byte[] GenerateLightMessage(ColorMode mode, ControlBlock block, LEDConfiguration ledConfig,
+                                                  int[] colorPattern) {
             // a message is constructed as following: 
             // 0x02  ; control command
             // 0x4c  ; light control, which begs to wonder what 0x4a is
@@ -238,7 +266,7 @@ namespace Octopode.Core {
                 message[i * 3 + 6] = (byte) ((colorPattern[i] & 0x00_FF_00) >> 8);
                 message[i * 3 + 7] = (byte) ((colorPattern[i] & 0x00_00_FF) >> 0);
             }
-            
+
 
             return message;
         }
@@ -278,6 +306,7 @@ namespace Octopode.Core {
             if(dataPoint.Status != HidDeviceData.ReadStatus.Success) {
                 throw new InvalidOperationException($"Cannot read from USB device! State was {dataPoint.Status}");
             }
+
             // this is the same behaviour as the CAM software.
             // Somehow it sometimes spits random, fixed values and nobody really knows why.
             if(dataPoint.Data[10] != deviceId) {
@@ -292,7 +321,7 @@ namespace Octopode.Core {
                 LastStates.Dequeue();
             }
         }
-        
+
         private KrakenState ParseDataPackage(HidDeviceData data) {
             var bytes = data.Data;
             var decimalTemperature = (float) bytes[2];

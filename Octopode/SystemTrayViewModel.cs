@@ -158,7 +158,7 @@ namespace Octopode {
         }
 
         private void LightingManagerCallback(LightningManager sender, LightSetting setting) {
-            commander.AddCommand(KrakenDevice.GenerateMessage(setting.mode,
+            commander.AddCommand(KrakenDevice.GenerateLightMessage(setting.mode,
                                                               new ControlBlock(false, false, sender.lightChannel),
                                                               new LEDConfiguration(0, 0, AnimationSpeed.Normal),
                                                               new[] {
@@ -212,21 +212,21 @@ namespace Octopode {
             System.Console.WriteLine("Starting staged Performance Benchmark:");
             Console.WriteLine("- Stage 1: Slow");
             for(var i = 0; i < 10; i++) {
-                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(35, true));
-                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(35, false));
+                commander.AddCommand(KrakenDevice.GenerateCoolingMessage(true, false, 35));
+                commander.AddCommand(KrakenDevice.GenerateCoolingMessage(false, false, 35));
                 Thread.Sleep(1000);
             }
 
             Console.WriteLine("- Stage 2: Full");
             for(var i = 0; i < 10; i++) {
-                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(100, true));
-                commander.AddCommand(KrakenDevice.GenerateSpeedMessage(100, false));
+                commander.AddCommand(KrakenDevice.GenerateCoolingMessage(true, false, 100));
+                commander.AddCommand(KrakenDevice.GenerateCoolingMessage(false, false, 100));
                 Thread.Sleep(1000);
             }
 
             Console.WriteLine("- Stage 3: Reset");
-            commander.AddCommand(KrakenDevice.GenerateSpeedMessage(40, true));
-            commander.AddCommand(KrakenDevice.GenerateSpeedMessage(40, false));
+            commander.AddCommand(KrakenDevice.GenerateCoolingMessage(true, false, 40));
+            commander.AddCommand(KrakenDevice.GenerateCoolingMessage(false, false, 40));
         }
 
         public void SetAnimationSpeed(AnimationSpeed speedSetting, MenuItem sender) {
@@ -238,13 +238,13 @@ namespace Octopode {
             previousSpeedBox = sender;
             logoManager.animationSpeed = speedSetting;
             rimManager.animationSpeed = speedSetting;
-            commander.AddCommand(KrakenDevice.GenerateMessage(logoManager.selectedSetting.mode,
+            commander.AddCommand(KrakenDevice.GenerateLightMessage(logoManager.selectedSetting.mode,
                                                               new ControlBlock(false, false, logoManager.lightChannel),
                                                               new LEDConfiguration(0, 0, speedSetting), new[] {
                                                                   0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
                                                                   0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF
                                                               }));
-            commander.AddCommand(KrakenDevice.GenerateMessage(rimManager.selectedSetting.mode,
+            commander.AddCommand(KrakenDevice.GenerateLightMessage(rimManager.selectedSetting.mode,
                                                               new ControlBlock(false, false, rimManager.lightChannel),
                                                               new LEDConfiguration(0, 0, speedSetting), new[] {
                                                                   0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF,
