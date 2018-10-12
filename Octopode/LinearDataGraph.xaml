@@ -3,33 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:Octopode"
-             xmlns:wpf="clr-namespace:InteractiveDataDisplay.WPF;assembly=InteractiveDataDisplay.WPF"
+             xmlns:oxy="http://oxyplot.org/wpf"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300">
-    
-    <Window.Resources>
-        <local:VisibilityToCheckedConverter x:Key="VisibilityToCheckedConverter"/>
-    </Window.Resources>
-    <Grid x:Name="LayoutRoot" Background="White">
-        <wpf:Chart Name="plotter">
-            <wpf:Chart.Title>
-                <TextBlock HorizontalAlignment="Center" FontSize="18" Margin="0,5,0,5">Line graph legend sample</TextBlock>
-            </wpf:Chart.Title>
-            <wpf:Chart.LegendContent>
-                <wpf:LegendItemsPanel>
-                    <wpf:LegendItemsPanel.Resources>
-                        <DataTemplate x:Key="InteractiveDataDisplay.WPF.LineGraph">
-                            <StackPanel Orientation="Horizontal">
-                                <CheckBox IsChecked="{Binding Path=Visibility, Converter={StaticResource VisibilityToCheckedConverter}, Mode=TwoWay}"/>
-                                <Line Width="15" Height="15" X1="0" Y1="0" X2="15" Y2="15" Stroke="{Binding Path=Stroke}" StrokeThickness="2"/>
-                                <TextBlock Margin="5,0,0,0" Text="{Binding Path=Description}"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </wpf:LegendItemsPanel.Resources>
-                </wpf:LegendItemsPanel>
-            </wpf:Chart.LegendContent>
-            <Grid Name="lines"/>
-        </wpf:Chart>
+             d:DesignHeight="300" d:DesignWidth="300"
+            Title="Octopode - RPM by Temperature"
+            Icon="Resources/octopode_icon.ico">
+    <Grid>
+        <oxy:PlotView Model="{Binding Model}"/>
     </Grid>
 </Window>

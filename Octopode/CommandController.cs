@@ -9,6 +9,10 @@ namespace Octopode {
         private HidDevice context;
         private object lockObject;
         private Task runningTask;
+        private long commandId;
+        private long resolvedCommandId;
+
+        public Action<long> ResolvedCommand;
         
         
         public CommandController(HidDevice device) {
@@ -17,10 +21,11 @@ namespace Octopode {
             commands = new Queue<byte[]>();
         }
 
-        public void AddCommand(byte[] command) {
+        public long AddCommand(byte[] command) {
             lock(lockObject) {
                 commands.Enqueue(command);
                 CheckAndStart();
+                return ++commandId;
             }
         }
 
@@ -42,6 +47,7 @@ namespace Octopode {
             if(!context.Write(command, 100)) {
                 Console.Error.WriteLine("A given command did not finish in the given time.");
             }
+            ResolvedCommand.Invoke(++resolvedCommandId);
         }
     }
 }
